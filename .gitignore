@@ -1,0 +1,50 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter checkpoints
+**/.ipynb_checkpoints
+
+# Environment / virtualenv
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Python egg info
+*.egg-info/
+*.egg
+
+# Distribution / packaging
+build/
+dist/
+*.tar.gz
+*.whl
+
+# Docker files (si no quieres subir imágenes o datos pesados)
+*.tar
+*.img
+
+# Logs and databases
+*.log
+*.sqlite
+mlflow/mlflow.db
+
+# VSCode / IDE files
+.vscode/
+.idea/
+
+# MacOS files
+.DS_Store
+
+# Pytest cache
+.pytest_cache/
+
+# Coverage reports
+htmlcov/
+.coverage
+
+# Jupyter notebook output (opcional, si no quieres guardar salidas)
+*.nbconvert.ipynb

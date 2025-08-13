@@ -1,0 +1,14 @@
+FROM jupyter/scipy-notebook:python-3.10
+
+USER root
+COPY jupyter/requirements.txt /tmp/
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+COPY jupyter/notebooks/train.ipynb /home/jovyan/work/train.ipynb
+
+RUN mkdir -p /home/jovyan/work/data
+COPY /data/fraud_train.csv /home/jovyan/work/data/fraud_train.csv
+
+RUN chown -R jovyan:users /home/jovyan/work/train.ipynb /home/jovyan/work/data
+
+USER $NB_UID
