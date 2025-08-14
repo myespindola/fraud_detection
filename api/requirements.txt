@@ -1,4 +1,8 @@
-mlflow==2.13.0
 fastapi
 uvicorn
-pydantic
+scikit-learn
+numpy
+pandas
+joblib
+mlflow==2.8
+category_encoders>=2.7.0

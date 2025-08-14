@@ -1,0 +1,10 @@
+artifact_location: file:///home/jovyan/work/notebooks/mlruns/996300222533804762/models/m-42527c933c7546b3b1e82041ad15c5d5/artifacts
+creation_timestamp: 1755129073645
+experiment_id: '996300222533804762'
+last_updated_timestamp: 1755129075773
+model_id: m-42527c933c7546b3b1e82041ad15c5d5
+model_type: null
+name: model
+source_run_id: 22dab24447524cdf8961f7922cd2e4ee
+status: 2
+status_message: null

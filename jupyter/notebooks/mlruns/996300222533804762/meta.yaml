@@ -1,0 +1,6 @@
+artifact_location: file:///home/jovyan/work/notebooks/mlruns/996300222533804762
+creation_time: 1755129072836
+experiment_id: '996300222533804762'
+last_update_time: 1755129072836
+lifecycle_stage: active
+name: fraud_detection

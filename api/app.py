@@ -1,37 +1,68 @@
-import mlflow
-from mlflow.exceptions import RestException
 from fastapi import FastAPI
 from pydantic import BaseModel
+import joblib
+import numpy as np
+import pandas as pd
 
-MODEL_NAME = "iris-classifier"
-MODEL_STAGE = "Production"
-model = None
+# ----- Cargar modelo al iniciar -----
+MODEL_PATH = "/mlflow/artifacts/1/5324911c0fa649798464866bb60214d1/artifacts/lr_baselr_model.pkl"
+model = joblib.load(MODEL_PATH)
 
-app = FastAPI()
+# ----- Columnas que vamos a usar para predecir -----
+SELECTED_COLUMNS = [
+    'Month',
+    'DayOfWeek',
+    'Make',
+    'AccidentArea',
+    'MonthClaimed',
+    'WeekOfMonthClaimed',
+    'MaritalStatus',
+    'Fault',
+    'PolicyType',
+    'VehicleCategory',
+    'VehiclePrice',
+    'Deductible',
+    'PastNumberOfClaims',
+    'AgeOfVehicle',
+    'AgeOfPolicyHolder',
+    'AgentType',
+    'NumberOfSuppliments',
+    'AddressChange_Claim',
+    'BasePolicy',
+    'FraudFound_P'
+]
 
-@app.on_event("startup")
-def load_model():
-    global model
-    try:
-        model = mlflow.pyfunc.load_model(f"models:/{MODEL_NAME}/{MODEL_STAGE}")
-        print(f"Modelo: {MODEL_NAME} cargado desde stage: {MODEL_STAGE}")
-    except RestException as e:
-        if "RESOURCE_DOES_NOT_EXIST" in str(e):
-            print(f"No existe el modelo: {MODEL_NAME} en stage: {MODEL_STAGE}")
-            model = None
-        else:
-            print(f"Error cargando modelo: {e}")
-            model = None
-    except Exception as e:
-        print(f"Error inesperado cargando modelo: {e}")
-        model = None
+# ----- Diccionario de reemplazo para Make -----
+REPLACE_MAP = {
+    'Porche': 'Luxyry',
+    'Ferrari': 'Luxyry',
+    'Mecedes': 'Luxyry'
+}
 
+# ----- Definir app y modelo de datos -----
+app = FastAPI(title="MLflow Prediction API")
+
+def score_from_prob(prob, factor, offset):
+    odds = prob / (1 - prob)
+    return offset - factor * np.log(odds)
 class InputData(BaseModel):
-    features: list
+    features: list[dict]  # Lista de diccionarios con nombres de columnas
 
+# ----- Endpoint de predicción -----
 @app.post("/predict")
 def predict(data: InputData):
-    if model is None:
-        return {"error": "No hay modelo en produccion disponible"}
-    prediction = model.predict([data.features])
-    return {"prediction": prediction.tolist()}
+    # Convertir a DataFrame
+    df = pd.DataFrame(data.features)
+    
+    # Reemplazar valores en 'Make'
+    df['Make'] = df['Make'].replace(REPLACE_MAP)
+    
+    # Filtrar solo las columnas seleccionadas
+    df = df[SELECTED_COLUMNS]
+    
+    # Separar features de target si es necesario
+    X = df.drop(columns=["FraudFound_P"], errors="ignore")
+    
+    # Predecir
+    preds = model.predict(X).tolist()
+    return {"predictions": preds}
