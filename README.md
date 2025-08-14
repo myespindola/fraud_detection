@@ -1,72 +1,69 @@
-# Proyecto: Detección de Fraude
+🕵️‍♂️ Proyecto: Detección de Fraude
+Este proyecto implementa un pipeline de Machine Learning para la detección de fraude. El flujo de trabajo completo se gestiona con herramientas y tecnologías modernas para garantizar la portabilidad y reproducibilidad.
 
-Este proyecto implementa un pipeline de **Machine Learning** para la detección de fraude. Utiliza **MLflow** para el tracking de experimentos, **Jupyter** para desarrollo y análisis, y una **API** para servir modelos entrenados. Todo se ejecuta en **contenedores Docker** para portabilidad y reproducibilidad.
+MLflow: Para el seguimiento de experimentos, modelos y métricas.
 
----
+Jupyter: Como entorno de desarrollo y análisis exploratorio.
 
-## Estructura del Proyecto
+API: Para servir los modelos entrenados y realizar predicciones en tiempo real.
 
+Docker: Todo se ejecuta en contenedores para una configuración uniforme y reproducible.
 
-
+📂 Estructura del Proyecto
 .
-├── mlflow/ # Dockerfile y configuración de MLflow
+├── mlflow/              # Configuración y Dockerfile de MLflow
 │ └── requirements.txt
-├── jupyter/ # Dockerfile y notebooks de análisis
+├── jupyter/             # Notebooks y Dockerfile de Jupyter
 │ ├── requirements.txt
 │ └── notebooks/
-├── api/ # Dockerfile para API de modelos
+├── api/                 # API para servir el modelo
 │ └── ...
-├── data/ # Datos de entrenamiento y prueba
-├── docker-compose.yml
-└── README.md
+├── data/                # Datos de entrenamiento y prueba
+├── docker-compose.yml   # Archivo para orquestar los contenedores
+└── README.md            # Este archivo
+⚙️ Requisitos
+Asegúrate de tener instalados los siguientes componentes:
 
+Docker: v24 o superior.
 
----
+Docker Compose: v3.9 o superior.
 
-## Requisitos
+🚀 Configuración y Despliegue
+Levantar los Contenedores
+Para construir y levantar todos los servicios, ejecuta el siguiente comando en la raíz del proyecto:
 
-- Docker >= 24
-- Docker Compose >= 3.9
+Bash
 
----
-
-## Configuración y Despliegue
-
-Construir y levantar los contenedores:
-
-```bash
 docker-compose up --build
+Esto iniciará tres servicios principales:
 
+mlflow: Servidor de MLflow en http://localhost:5000
 
-Esto creará tres servicios:
+jupyter: Jupyter Notebook en http://localhost:8888 (con token: admin)
 
-mlflow: Servidor MLflow en http://localhost:5000
+api: API para el modelo ML en http://localhost:8000
 
-jupyter: Jupyter Notebook en http://localhost:8888 (token: admin)
+Permisos
+Antes de iniciar, es crucial asegurarse de que la carpeta de artefactos de MLflow tenga los permisos correctos.
 
-api: API para servir modelos ML en el puerto 8000
-
-Verificar directorios y permisos
-
-Asegúrate que la carpeta ./mlflow tenga permisos de lectura/escritura:
+Bash
 
 mkdir -p ./mlflow/artifacts
 chmod -R 777 ./mlflow
+Nota: Para entornos de producción, se recomienda cambiar 777 por permisos más específicos para el usuario.
 
+💻 Uso de los Servicios
+Acceso a los servicios
+Servicio	URL de Acceso
+MLflow	http://localhost:5000
+Jupyter	http://localhost:8888 (token: admin)
+API	http://localhost:8000
 
-Nota: Para producción se recomienda cambiar 777 por permisos específicos del usuario.
-
-Acceso a los Servicios
-
-MLflow: http://localhost:5000
-
-Jupyter: http://localhost:8888 (token: admin)
-
-API: http://localhost:8000
-
+Exportar a Hojas de cálculo
 Uso de MLflow
+Puedes registrar tus experimentos y modelos directamente desde tus scripts o notebooks de Jupyter:
 
-Guardar parámetros, métricas y artefactos de modelos:
+Python
 
 import mlflow
 import mlflow.sklearn
@@ -80,88 +77,55 @@ with mlflow.start_run(run_name="LR_Scorecard"):
     mlflow.log_metric("KS", ks)
     mlflow.log_metric("Fbeta", fb)
     mlflow.sklearn.log_model(pipeline, name="LR_Scorecard")
-
 Jupyter Notebooks
+Los notebooks se encuentran en la ruta /home/jovyan/work/notebooks dentro del contenedor. El directorio data/ está montado como un volumen, permitiendo el acceso a los datos de entrenamiento y prueba.
 
-Los notebooks se encuentran en /home/jovyan/work/notebooks dentro del contenedor.
-Se pueden usar los datos en ./data como volumen montado.
-
-Modelo Base
-Carga de datos
-
-Dataset: fraud_train.csv en data/
+📊 Modelo Base de Detección de Fraude
+Carga de Datos y Preprocesamiento
+El modelo utiliza el dataset fraud_train.csv ubicado en la carpeta data/.
 
 Columnas relevantes:
 
-'Month', 'DayOfWeek', 'Make', 'AccidentArea', 'MonthClaimed',
-'WeekOfMonthClaimed', 'MaritalStatus', 'Fault', 'PolicyType',
-'VehicleCategory', 'VehiclePrice', 'Deductible', 'PastNumberOfClaims',
-'AgeOfVehicle', 'AgeOfPolicyHolder', 'AgentType', 'NumberOfSuppliments',
-'AddressChange_Claim', 'BasePolicy', 'FraudFound_P'
+'Month', 'DayOfWeek', 'Make', 'AccidentArea', 'MonthClaimed', 'WeekOfMonthClaimed', 'MaritalStatus', 'Fault', 'PolicyType', 'VehicleCategory', 'VehiclePrice', 'Deductible', 'PastNumberOfClaims', 'AgeOfVehicle', 'AgeOfPolicyHolder', 'AgentType', 'NumberOfSuppliments', 'AddressChange_Claim', 'BasePolicy', 'FraudFound_P'
 
-Preprocesamiento
+Preprocesamiento:
 
-Agrupación de autos de lujo: 'Porche', 'Ferrari', 'Mecedes' → 'Luxury'
+Agrupación de autos de lujo ('Porche', 'Ferrari', 'Mercedes') en la categoría 'Luxury'.
 
-Separación de variables predictoras y target:
+Separación de variables predictoras (X) y la variable objetivo (y): FraudFound_P.
 
-X = df_final.drop('FraudFound_P', axis=1)
-y = df_final['FraudFound_P']
+Optimización de Hiperparámetros
+Se usa Optuna para optimizar el pipeline de WOEEncoder y LogisticRegression.
 
+Validación Cruzada: Se usa StratifiedKFold con 5 folds.
 
-Validación del 10% del dataset, estratificada por la variable objetivo.
+Métrica de Optimización: F-beta (
+beta=2), que prioriza el recall para una mejor detección de casos de fraude.
 
-Optimización de Hiperparámetros con Optuna
-
-Pipeline con WOEEncoder y LogisticRegression
-
-Validación cruzada StratifiedKFold 5 folds
-
-Métrica: F-beta (β=2)
-
-Hiperparámetros: C y max_iter
-
-F-beta con β>1 prioriza recall, útil para detectar todos los casos de fraude.
+Hiperparámetros a optimizar: C y max_iter.
 
 Entrenamiento del Modelo Final
+El modelo final es un pipeline con:
 
-Pipeline:
+WOEEncoder: Transforma variables categóricas en valores numéricos.
 
-WOEEncoder: transforma variables categóricas en valores WOE
-
-LogisticRegression: class_weight="balanced"
+LogisticRegression: Con el parámetro class_weight="balanced" para manejar el desbalanceo de clases.
 
 Generación de Scorecard
+La puntuación individual de cada caso se calcula con la siguiente fórmula, lo que permite una interpretación clara del riesgo de fraude.
 
-Fórmula de score individual:
-
-odds = prob / (1 - prob)
-score = offset - factor * np.log(odds)
-
-
-Permite interpretar la contribución de cada variable al riesgo de fraude.
-
+score=offset−factor∗np.log(odds)
 Evaluación del Modelo
-
-Métricas en validación:
+Las métricas de validación registradas son:
 
 AUC
 
 KS
 
-F-beta (β=2)
+F-beta (
+beta=2)
 
-Matriz de confusión con ConfusionMatrixDisplay
-
-Probabilidades convertidas a predicciones binarias con threshold 0.5
-
-Registro con MLflow
-
-Parámetros del modelo (best_params)
-
-Métricas (AUC, KS, F-beta)
-
-Artefactos:
+Se genera una Matriz de Confusión y se registran los siguientes artefactos con MLflow:
 
 Modelo serializado (lr_model.pkl)
 
@@ -169,12 +133,11 @@ Scorecard (lr_base_scorecard.csv)
 
 Matriz de confusión (lr_base_confusion_matrix.png)
 
-Uso de la API
+🌐 Uso de la API para Predicciones
+La API está disponible en http://localhost:8000 y permite enviar datos en formato JSON para obtener predicciones.
+
 Request
-
-Content-Type: application/json
-
-Body: lista de diccionarios con columnas requeridas
+JSON
 
 {
   "features": [
@@ -203,18 +166,16 @@ Body: lista de diccionarios con columnas requeridas
     }
   ]
 }
+Ejemplo con PowerShell
+PowerShell
 
-
-Puedes enviar varias filas para predicciones batch.
-
-Ejemplo PowerShell
 Invoke-RestMethod -Uri "http://localhost:8000/predict" -Method POST -ContentType "application/json" `
 -Body '{ "features": [ { "ID": "CL00007646", "Month": "Aug", "DayOfWeek": "Friday", "Make": "Honda", "AccidentArea": "Urban", "MonthClaimed": "Aug", "WeekOfMonthClaimed": 5, "MaritalStatus": "Married", "Fault": "Policy Holder", "PolicyType": "Sedan - All Perils", "VehicleCategory": "Sedan", "VehiclePrice": "30000 to 39000", "Deductible": 400, "PastNumberOfClaims": 1, "AgeOfVehicle": "7 years", "AgeOfPolicyHolder": "36 to 40", "AgentType": "External", "NumberOfSuppliments": "1 to 2", "AddressChange_Claim": "4 to 8 years", "BasePolicy": "All Perils", "FraudFound_P": 0 } ] }'
-
 Respuesta
+La API retorna una lista de predicciones. Un 0 indica "no fraude" y un 1 indica "fraude".
+
+JSON
+
 {
   "predictions": [0]
 }
-
-
-Cada elemento corresponde al resultado del modelo (0 = no fraude, 1 = fraude).
