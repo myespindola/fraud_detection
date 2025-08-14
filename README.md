@@ -1,5 +1,3 @@
-Aquí tienes un README.md en formato Markdown listo para tu proyecto de Detección de Fraude:
-
 # Proyecto: Detección de Fraude
 
 Este proyecto implementa un pipeline de **Machine Learning** para la detección de fraude. Utiliza **MLflow** para el tracking de experimentos, **Jupyter** para desarrollo y análisis, y una **API** para servir modelos entrenados. Todo se ejecuta en **contenedores Docker** para portabilidad y reproducibilidad.
